@@ -11,21 +11,6 @@ let
     # use the current system by default but allow overriding from callside
     inherit localSystem;
   };
-  # get access to mach-nix's mkPython function
-  inherit (
-    import (
-      pkgs.fetchFromGitHub {
-        owner = "davhau";
-        repo = "mach-nix";
-        rev = "7e14360bde07dcae32e5e24f366c83272f52923f"; # tag: 3.5.0
-        hash = "sha256-j/XrVVistvM+Ua+0tNFvO5z83isL+LBgmBi9XppxuKA=";
-      }
-    ) {
-      inherit pkgs;
-      pypiDataRev = "ba35683c35218acb5258b69a9916994979dc73a9";
-      pypiDataSha256 = "019m7vnykryf0lkqdfd7sgchmfffxij1vw2gvi5l15an8z3rfi2p";
-    }
-  ) mkPython;
 in
 rec {
   zephyr-toolchain = pkgs.fetchzip {
@@ -83,31 +68,26 @@ rec {
 
     dontFixup = true;
   };
-  zephyr-py-venv = let
-    # Zephyr's top-level requirements.txt file includes all those files via the -r directive
-    # which is not understood by mach-nix.
-    requirementsNames = [
-      "base"
-      #"doc"
-      # "build-test" - we do not need to build the Zephyr test suite
-      # "run-test" - we do not need this at the moment
-      # "extras" - not required and contains packages not recognized by mach-nix
-      # "compliance" - we do not need to run the compliance scripts
-    ];
-    requirementsPaths = builtins.map (name: "${zephyr-src}/zephyr/scripts/requirements-${name}.txt") requirementsNames;
-    requirementsContents = builtins.map (path: builtins.readFile path) requirementsPaths;
-    requirements = pkgs.lib.strings.concatStringsSep "\n" requirementsContents;
-  in mkPython {
-    inherit requirements;
-  };
   shell = pkgs.mkShell {
     name = "syncubus-dev-shell";
 
     packages = [
       zephyr-toolchain
       zephyr-src
-      zephyr-py-venv
+
       pkgs.python310Packages.west
+
+      # python packages defined in zephyr/scripts/requirements-base.txt
+      pkgs.python310Packages.pyelftools
+      pkgs.python310Packages.pyyaml
+      pkgs.python310Packages.pykwalify
+      pkgs.python310Packages.canopen
+      pkgs.python310Packages.packaging
+      pkgs.python310Packages.progress
+      pkgs.python310Packages.psutil
+      pkgs.python310Packages.pylink-square
+      pkgs.python310Packages.anytree
+      pkgs.python310Packages.intelhex
     ];
 
     ZEPHYR_BASE = "${zephyr-src}";

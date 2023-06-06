@@ -12,14 +12,20 @@ let
     inherit localSystem;
   };
   # get access to mach-nix's mkPython function
-  inherit (import
-    (pkgs.fetchFromGitHub {
-      owner = "davhau";
-      repo = "mach-nix";
-      rev = "7e14360bde07dcae32e5e24f366c83272f52923f"; # tag: 3.5.0
-      hash = "sha256-j/XrVVistvM+Ua+0tNFvO5z83isL+LBgmBi9XppxuKA=";
-    })
-    { inherit pkgs; }) mkPython;
+  inherit (
+    import (
+      pkgs.fetchFromGitHub {
+        owner = "davhau";
+        repo = "mach-nix";
+        rev = "7e14360bde07dcae32e5e24f366c83272f52923f"; # tag: 3.5.0
+        hash = "sha256-j/XrVVistvM+Ua+0tNFvO5z83isL+LBgmBi9XppxuKA=";
+      }
+    ) {
+      inherit pkgs;
+      pypiDataRev = "ba35683c35218acb5258b69a9916994979dc73a9";
+      pypiDataSha256 = "019m7vnykryf0lkqdfd7sgchmfffxij1vw2gvi5l15an8z3rfi2p";
+    }
+  ) mkPython;
 in
 rec {
   zephyr-toolchain = pkgs.fetchzip {
@@ -33,7 +39,7 @@ rec {
     version = "3.3.0";
 
     outputHashMode = "recursive";
-    outputHash = "sha256-JFM7ef6aVH8JjBero+lNA+Jd8Zamum75fBE64GJq8uI=";
+    outputHash = "sha256-+x5LVvvBjc8h74Zp4E6gCCTFDunNVI+eC999xU13g7U=";
 
     nativeBuildInputs = [ pkgs.python310Packages.west pkgs.git pkgs.cacert ];
 
@@ -70,14 +76,29 @@ rec {
     '';
 
     installPhase = ''
+      echo "OUTT: $out"
       mkdir "$out"
       cp -r * "$out"
     '';
 
     dontFixup = true;
   };
-  zephyr-py-venv = mkPython {
-    requirements = builtins.readFile "${zephyr-src}/zephyr-manifest-repo/scripts/requirements.txt";
+  zephyr-py-venv = let
+    # Zephyr's top-level requirements.txt file includes all those files via the -r directive
+    # which is not understood by mach-nix.
+    requirementsNames = [
+      "base"
+      #"doc"
+      # "build-test" - we do not need to build the Zephyr test suite
+      # "run-test" - we do not need this at the moment
+      # "extras" - not required and contains packages not recognized by mach-nix
+      # "compliance" - we do not need to run the compliance scripts
+    ];
+    requirementsPaths = builtins.map (name: "${zephyr-src}/zephyr/scripts/requirements-${name}.txt") requirementsNames;
+    requirementsContents = builtins.map (path: builtins.readFile path) requirementsPaths;
+    requirements = pkgs.lib.strings.concatStringsSep "\n" requirementsContents;
+  in mkPython {
+    inherit requirements;
   };
   shell = pkgs.mkShell {
     name = "syncubus-dev-shell";

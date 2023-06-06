@@ -24,7 +24,8 @@ rec {
     version = "3.3.0";
 
     outputHashMode = "recursive";
-    outputHash = "sha256-+x5LVvvBjc8h74Zp4E6gCCTFDunNVI+eC999xU13g7U=";
+    outputHashAlgo = "sha256";
+    outputHash = "sha256-Z9QvSFgt3FY70gWruqU/OCwNNkLTxjGhT6o+JPuQP5Q=";
 
     nativeBuildInputs = [ pkgs.python310Packages.west pkgs.git pkgs.cacert ];
 
@@ -61,9 +62,8 @@ rec {
     '';
 
     installPhase = ''
-      echo "OUTT: $out"
       mkdir "$out"
-      cp -r * "$out"
+      cp -r * .west "$out"
     '';
 
     dontFixup = true;

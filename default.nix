@@ -56,8 +56,11 @@ rec {
       west init -l "$(stripHash "$src")"
     '';
 
+    # The update call is optimized for speed by fetching only what will end up in the working
+    # directory. Due to the removal of all .git folders any additional data would be removed
+    # anyways. The .git folders need to be removed because their content is not deterministic.
     buildPhase = ''
-      west update
+      west update --narrow --fetch-opt="--depth=1"
       find . -type d -name ".git" -exec rm -rf {} +
     '';
 

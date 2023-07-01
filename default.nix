@@ -13,10 +13,10 @@ let
   };
 in
 rec {
-  zephyr-toolchain = pkgs.fetchzip {
+  zephyr-toolchain = pkgs.fetchzip rec {
     pname = "zephyr-toolchain";
     version = "0.16.1";
-    url = "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.1/toolchain_linux-x86_64_arm-zephyr-eabi.tar.xz";
+    url = "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${version}/toolchain_linux-x86_64_arm-zephyr-eabi.tar.xz";
     hash = "sha256-3nLJ5K99XP9FJ+KRodHhKhNRBCWqLxnjxg4CuMbXKAw=";
   };
   zephyr-src = pkgs.stdenv.mkDerivation {

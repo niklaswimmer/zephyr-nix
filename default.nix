@@ -83,19 +83,8 @@ rec {
       zephyr-toolchain
       zephyr-src
 
-      pkgs.python310Packages.west
-
-      # python packages defined in zephyr/scripts/requirements-base.txt
-      pkgs.python310Packages.pyelftools
-      pkgs.python310Packages.pyyaml
-      pkgs.python310Packages.pykwalify
-      pkgs.python310Packages.canopen
-      pkgs.python310Packages.packaging
-      pkgs.python310Packages.progress
-      pkgs.python310Packages.psutil
-      pkgs.python310Packages.pylink-square
-      pkgs.python310Packages.anytree
-      pkgs.python310Packages.intelhex
+      # 3.11 gives annoying warnings during pip install due to the deprecation of setup.py
+      pkgs.python310
     ];
 
     # This will turn into an exported bash variable inside the shell. It tells West
@@ -103,6 +92,22 @@ rec {
     ZEPHYR_BASE = "${zephyr-src}/${zephyr-src.src.name}";
 
     shellHook = ''
+      FRESH=0
+
+      if [[ ! -d .venv ]]; then
+        FRESH=1
+        python -m venv .venv
+      fi
+
+      VIRTUAL_ENV_DISABLE_PROMPT=1
+      source .venv/bin/activate
+
+      if [[ $FRESH -eq 1 ]]; then
+        pip install -r ${zephyr-src}/${zephyr-src.src.name}/scripts/requirements.txt
+      fi
+
+      unset FRESH
+
       echo "Welcome to the SynCubus Firmware development environment. Happy coding!"
     '';
   };

@@ -94,7 +94,7 @@ rec {
       pkgs.python310Packages.intelhex
     ];
 
-    ZEPHYR_BASE = "${zephyr-src}";
+    ZEPHYR_BASE = "${zephyr-src}/${zephyr-src.src.name}";
 
     shellHook = ''
       echo "Welcome to the SynCubus Firmware development environment. Happy coding!"

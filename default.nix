@@ -13,12 +13,14 @@ let
   };
 in
 rec {
+  # The complete arm-zephyr-eabi toolchain with compiler, linker and everything else
   zephyr-toolchain = pkgs.fetchzip rec {
     pname = "zephyr-toolchain";
     version = "0.16.1";
     url = "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${version}/toolchain_linux-x86_64_arm-zephyr-eabi.tar.xz";
     hash = "sha256-3nLJ5K99XP9FJ+KRodHhKhNRBCWqLxnjxg4CuMbXKAw=";
   };
+  # The Zephyr source bundle, defined by the remote West manifest repository.
   zephyr-src = pkgs.stdenv.mkDerivation {
     pname = "zephyr-src";
     version = "3.3.0";
@@ -70,6 +72,8 @@ rec {
       cp -r * .west "$out"
     '';
 
+    # Fixup does all kinds of things (mostly by patching files) and I do not trust it to
+    # not messup the source code by accident.
     dontFixup = true;
   };
   shell = pkgs.mkShell {
@@ -94,6 +98,8 @@ rec {
       pkgs.python310Packages.intelhex
     ];
 
+    # This will turn into an exported bash variable inside the shell. It tells West
+    # and the CMake buildsystem where it can find our Zephyr workspace.
     ZEPHYR_BASE = "${zephyr-src}/${zephyr-src.src.name}";
 
     shellHook = ''

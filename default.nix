@@ -25,12 +25,13 @@ rec {
 
     outputHashMode = "recursive";
     outputHashAlgo = "sha256";
-    outputHash = "sha256-Z9QvSFgt3FY70gWruqU/OCwNNkLTxjGhT6o+JPuQP5Q=";
+    outputHash = "sha256-fvpBsA+2X6cQ/S041BqDXBV/Kk29pOVKha3Wn6BPEbA=";
 
     nativeBuildInputs = [ pkgs.python310Packages.west pkgs.git pkgs.cacert ];
 
+    # The name cannot be 'zephyr' due to some West quirks that clash with our Nix setup.
     src = pkgs.fetchFromGitHub {
-      name = "zephyr";
+      name = "zephyr-main";
       owner = "zephyrproject-rtos";
       repo = "zephyr";
       rev = "07c6af3b8c35c1e49186578ca61a25c76e2fb308"; # tag: 3.3.0

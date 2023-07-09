@@ -11,14 +11,43 @@ let
     # use the current system by default but allow overriding from callside
     inherit localSystem;
   };
+  platform = pkgs.stdenv.buildPlatform.uname;
 in
 rec {
   # The complete arm-zephyr-eabi toolchain with compiler, linker and everything else
-  zephyr-toolchain = pkgs.fetchzip rec {
+  zephyr-toolchain = pkgs.stdenv.mkDerivation rec {
     pname = "zephyr-toolchain";
     version = "0.16.1";
-    url = "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${version}/toolchain_linux-x86_64_arm-zephyr-eabi.tar.xz";
-    hash = "sha256-3nLJ5K99XP9FJ+KRodHhKhNRBCWqLxnjxg4CuMbXKAw=";
+
+    outputHashMode = "recursive";
+    outputHashAlgo = "sha256";
+    outputHash = "sha256-isAc7a7yuvGxuB3EvNJsTbjU+ZvTmStoX32XH5VDtzY=";
+
+    srcs = [
+      (pkgs.fetchzip {
+        url = "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${version}/zephyr-sdk-${version}_${platform.system}-${platform.processor}_minimal.tar.xz";
+        hash = "sha256-XfJYS9ew+iIlId1Bpa3X1qrX4kygA02w0tqwZM0cmO0=";
+      })
+      (pkgs.fetchzip {
+        name = "arm-zephyr-eabi";
+        url = "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${version}/toolchain_${platform.system}-${platform.processor}_arm-zephyr-eabi.tar.xz";
+        hash = "sha256-3nLJ5K99XP9FJ+KRodHhKhNRBCWqLxnjxg4CuMbXKAw=";
+      })
+    ];
+
+    setSourceRoot = ''
+      sourceRoot="$NIX_BUILD_TOP/source"
+    '';
+
+    dontConfigure = true;
+    dontBuild = true;
+
+    installPhase = ''
+      mkdir "$out"
+      cp -r sdk_version cmake "$NIX_BUILD_TOP/arm-zephyr-eabi" "$out"
+    '';
+
+    dontFixup = true;
   };
   # The Zephyr source bundle, defined by the remote West manifest repository.
   zephyr-src = pkgs.stdenv.mkDerivation {
@@ -90,6 +119,9 @@ rec {
     # This will turn into an exported bash variable inside the shell. It tells West
     # and the CMake buildsystem where it can find our Zephyr workspace.
     ZEPHYR_BASE = "${zephyr-src}/${zephyr-src.src.name}";
+
+    # Tell Zephyr where it can find its toolchain.
+    ZEPHYR_SDK_INSTALL_DIR = "${zephyr-toolchain}";
 
     shellHook = ''
       FRESH=0

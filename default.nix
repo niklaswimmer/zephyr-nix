@@ -112,6 +112,17 @@ rec {
       zephyr-toolchain
       zephyr-src
 
+      pkgs.git
+      pkgs.cacert
+      pkgs.cmake
+      pkgs.ninja
+      pkgs.gperf
+      pkgs.ccache
+      pkgs.dfu-util
+      pkgs.dtc
+      pkgs.wget
+      pkgs.SDL2
+
       # 3.11 gives annoying warnings during pip install due to the deprecation of setup.py
       pkgs.python310
     ];
